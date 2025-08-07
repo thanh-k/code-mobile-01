@@ -20,5 +20,13 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        Intent intent = getIntent();
+        String txtPhone = intent.getStringExtra("phone");
+        String txtpass = intent.getStringExtra("pass");
+
+        TextView tvWelcome = findViewById(R.id.tvWelcome);
+
+        // Hiển thị lời chào
+        tvWelcome.setText("Xin chào " + txtPhone);
     }
 }
