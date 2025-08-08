@@ -19,6 +19,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.hitcapp.fragments.HomeFragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -81,15 +82,15 @@ public class login extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONArray response) {
                         boolean isLoginSuccess = false;
-
+                        String name = "";
                         try {
                             for (int i = 0; i < response.length(); i++) {
                                 JSONObject user = response.getJSONObject(i);
                                 String apiPhone = user.getString("phone");
                                 String apiPass = user.getString("pass");
-                                String name = user.getString("name");
 
                                 if (phone.equals(apiPhone) && pass.equals(apiPass)) {
+                                    name = user.getString("name");
                                     isLoginSuccess = true;
                                     break;
                                 }
@@ -102,6 +103,7 @@ public class login extends AppCompatActivity {
                             Toast.makeText(getApplicationContext(), "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                             intent.putExtra("phone", phone);
+                            intent.putExtra("name", name);
                             startActivity(intent);
                         } else {
                             Toast.makeText(getApplicationContext(), "Sai số điện thoại hoặc mật khẩu", Toast.LENGTH_SHORT).show();
