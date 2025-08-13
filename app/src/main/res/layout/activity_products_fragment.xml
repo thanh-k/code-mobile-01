@@ -7,4 +7,17 @@
     android:layout_height="match_parent"
     tools:context=".fragments.ProductsFragment">
 
+
+    <!-- Danh sách sản phẩm dạng List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvProductsList"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="12dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_product_list"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
