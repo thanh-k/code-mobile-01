@@ -3,10 +3,7 @@ package com.example.hitcapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
-
+import android.widget.*;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -15,11 +12,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.hitcapp.fragments.HomeFragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,32 +36,32 @@ public class login extends AppCompatActivity {
             return insets;
         });
 
-        editPhone = findViewById(R.id.etPhone);
-        editPass = findViewById(R.id.etPassword);
-        Button btnLogin = findViewById(R.id.btnLogin);
+        editPhone    = findViewById(R.id.etPhone);
+        editPass     = findViewById(R.id.etPassword);
+        Button btnLogin    = findViewById(R.id.btnLogin);
         Button btnRegister = findViewById(R.id.btnRegister);
+        TextView tvForgot  = findViewById(R.id.tvForgot);   // <- thêm
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String inputPhone = editPhone.getText().toString().trim();
-                String inputPass = editPass.getText().toString().trim();
+        btnLogin.setOnClickListener(v -> {
+            String inputPhone = editPhone.getText().toString().trim();
+            String inputPass  = editPass.getText().toString().trim();
 
-                if (inputPhone.isEmpty() || inputPass.isEmpty()) {
-                    Toast.makeText(getApplicationContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                checkLogin(inputPhone, inputPass);
+            if (inputPhone.isEmpty() || inputPass.isEmpty()) {
+                Toast.makeText(getApplicationContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                return;
             }
+            checkLogin(inputPhone, inputPass);
         });
 
-        btnRegister.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent it = new Intent(getApplicationContext(), register.class);
-                startActivity(it);
-            }
+        btnRegister.setOnClickListener(v -> {
+            Intent it = new Intent(getApplicationContext(), register.class);
+            startActivity(it);
+        });
+
+        // Mở trang Quên mật khẩu
+        tvForgot.setOnClickListener(v -> {
+            Intent it = new Intent(getApplicationContext(), ForgotPasswordActivity.class);
+            startActivity(it);
         });
     }
 
@@ -75,47 +69,52 @@ public class login extends AppCompatActivity {
         RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonArrayRequest request = new JsonArrayRequest(
-                Request.Method.GET,
-                url,
-                null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        boolean isLoginSuccess = false;
-                        String name = "";
-                        try {
-                            for (int i = 0; i < response.length(); i++) {
-                                JSONObject user = response.getJSONObject(i);
-                                String apiPhone = user.getString("phone");
-                                String apiPass = user.getString("pass");
+                Request.Method.GET, url, null,
+                response -> {
+                    boolean isLoginSuccess = false;
+                    String name = "";
+                    String userId = null;
 
-                                if (phone.equals(apiPhone) && pass.equals(apiPass)) {
-                                    name = user.getString("name");
-                                    isLoginSuccess = true;
-                                    break;
-                                }
+                    try {
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject user = response.getJSONObject(i);
+                            String apiPhone = user.optString("phone", "");
+                            String apiPass  = user.optString("pass", ""); // lưu ý: field đang là 'pass'
+
+                            if (phone.equals(apiPhone) && pass.equals(apiPass)) {
+                                name   = user.optString("name", "");
+                                userId = user.optString("id", null);
+                                isLoginSuccess = true;
+                                break;
                             }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (isLoginSuccess) {
+                        // LƯU PHIÊN: để màn Home/Profile lấy avatar theo id
+                        if (userId != null) {
+                            getApplicationContext()
+                                    .getSharedPreferences("app_session", MODE_PRIVATE)
+                                    .edit()
+                                    .putString("user_id", userId)
+                                    .apply();
                         }
 
-                        if (isLoginSuccess) {
-                            Toast.makeText(getApplicationContext(), "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                            intent.putExtra("phone", phone);
-                            intent.putExtra("name", name);
-                            startActivity(intent);
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Sai số điện thoại hoặc mật khẩu", Toast.LENGTH_SHORT).show();
-                        }
+                        Toast.makeText(getApplicationContext(), "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        intent.putExtra("phone", phone);
+                        intent.putExtra("name", name);
+                        startActivity(intent);
+                        finish(); // không quay lại Login khi back
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Sai số điện thoại hoặc mật khẩu", Toast.LENGTH_SHORT).show();
                     }
                 },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), "Lỗi kết nối đến server", Toast.LENGTH_SHORT).show();
-                        error.printStackTrace();
-                    }
+                error -> {
+                    Toast.makeText(getApplicationContext(), "Lỗi kết nối đến server", Toast.LENGTH_SHORT).show();
+                    error.printStackTrace();
                 }
         );
 
