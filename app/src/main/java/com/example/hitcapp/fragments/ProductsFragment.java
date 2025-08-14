@@ -1,17 +1,19 @@
 package com.example.hitcapp.fragments;
 
 import android.os.Bundle;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.annotation.*;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.hitcapp.R;
@@ -25,35 +27,53 @@ import java.util.List;
 
 public class ProductsFragment extends Fragment {
 
-    private static final String API_URL =
-            "https://68940ddebe3700414e11df37.mockapi.io/log/product";
+    private static final String PRODUCTS_URL = "https://api.escuelajs.co/api/v1/products";
 
     private final List<SimpleProductListAdapter.ProductItem> data = new ArrayList<>();
     private SimpleProductListAdapter adapter;
 
-    @Nullable @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.activity_products_fragment, container, false);
 
         RecyclerView rv = root.findViewById(R.id.rvProductsList);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new SimpleProductListAdapter(data);   // bạn đang bỏ qua sự kiện Add-to-cart
+
+        // Có thể truyền null nếu chưa cần bắt sự kiện
+        adapter = new SimpleProductListAdapter(data, new SimpleProductListAdapter.OnProductActionListener() {
+            @Override public void onClickDetail(SimpleProductListAdapter.ProductItem it) {
+                // Mở chi tiết (nếu bạn đã có ProductDetailFragment)
+                Fragment f = ProductDetailFragment.newInstance(
+                        it.id, it.name, it.subtitle, it.imageUrl, it.price
+                );
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.frame_layout, f)
+                        .addToBackStack("product_detail")
+                        .commit();
+            }
+            @Override public void onClickAdd(SimpleProductListAdapter.ProductItem it) {
+                Toast.makeText(requireContext(), "Đã thêm: " + it.name, Toast.LENGTH_SHORT).show();
+            }
+        });
+
         rv.setAdapter(adapter);
 
-        fetchProducts();   // <-- CALL API
+        fetchProducts();
         return root;
     }
 
     private void fetchProducts() {
-        RequestQueue q = Volley.newRequestQueue(requireContext());
         JsonArrayRequest req = new JsonArrayRequest(
-                Request.Method.GET, API_URL, null,
-                this::bindList, error ->
-                Toast.makeText(requireContext(), "Lỗi tải danh sách", Toast.LENGTH_SHORT).show()
+                Request.Method.GET, PRODUCTS_URL, null,
+                this::bindList,
+                error -> Toast.makeText(requireContext(), "Lỗi tải danh sách", Toast.LENGTH_SHORT).show()
         );
         req.setRetryPolicy(new DefaultRetryPolicy(10000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-        q.add(req);
+        Volley.newRequestQueue(requireContext()).add(req);
     }
 
     private void bindList(JSONArray arr) {
@@ -62,29 +82,20 @@ public class ProductsFragment extends Fragment {
             JSONObject o = arr.optJSONObject(i);
             if (o == null) continue;
 
-            String name = o.optString("Nameproduct", "");
-            String desc = o.optString("describe", "");
-            String img  = o.optString("image", "");
-            String priceStr = o.optString("price", "0");
+            String id    = String.valueOf(o.optInt("id", 0));
+            String name  = o.optString("title", "");
+            String desc  = o.optString("description", "");
+            double price = o.optDouble("price", 0);
 
-            double price = parsePrice(priceStr);
-            data.add(new SimpleProductListAdapter.ProductItem(img, name, desc, price));
+            String img = null;
+            JSONArray images = o.optJSONArray("images");
+            if (images != null && images.length() > 0) {
+                img = images.optString(0, "");
+            }
+
+            // ✅ Truyền ĐỦ 5 tham số: id, imageUrl, name, subtitle, price
+            data.add(new SimpleProductListAdapter.ProductItem(id, img, name, desc, price));
         }
         adapter.notifyDataSetChanged();
-    }
-
-    private double parsePrice(String s) {
-        try { return Double.parseDouble(s.replaceAll("[^0-9.]", "")); }
-        catch (Exception e) { return 0d; }
-    }
-    private void openDetail(SimpleProductListAdapter.ProductItem it) {
-        Fragment f = ProductDetailFragment.newInstance(
-                it.id, it.name, it.subtitle, it.imageUrl, it.price
-        );
-        requireActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.frame_layout, f)  // container trong activity_main.xml
-                .addToBackStack("product_detail")
-                .commit();
     }
 }

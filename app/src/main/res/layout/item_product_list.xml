@@ -60,12 +60,35 @@
                 android:textStyle="bold"
                 android:textColor="?attr/colorPrimary" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnAddToCart"
+            <!-- Hàng actions: icon chi tiết + nút thêm giỏ (cùng 1 hàng) -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="8dp"
-                android:text="Thêm vào giỏ" />
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end"
+                android:paddingTop="8dp">
+
+                <!-- Icon chi tiết: "mắt" -->
+                <ImageButton
+                    android:id="@+id/ibDetails"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="6dp"
+                    android:src="@android:drawable/ic_menu_view"
+                    android:contentDescription="Xem chi tiết" />
+
+                <!-- Giữ nguyên id nút thêm giỏ, đổi width để nằm cùng hàng -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddToCart"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:text="Thêm vào giỏ"
+                    app:icon="@drawable/ic_cart_24"
+                    app:iconPadding="8dp"
+                    app:iconTint="?attr/colorOnPrimary" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        >
+
+        <!-- Ảnh bìa -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="180dp">
+            <ImageView
+                android:id="@+id/imgCover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner" />
+            <Button
+                android:id="@+id/btnChangeCover"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✎ Đổi ảnh bìa"
+                android:backgroundTint="#673AB7"
+                android:textColor="@android:color/white"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="10dp"/>
+        </FrameLayout>
+
+        <!-- Ảnh đại diện -->
+        <ImageView
+            android:id="@+id/imgProfile"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:src="@drawable/avatar"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="-50dp"
+            android:background="@drawable/btn_su"
+            android:elevation="5dp"
+            android:padding="5dp"
+            android:clipToOutline="true" />
+
+        <Button
+            android:id="@+id/btnChangeAvatar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✎ Đổi ảnh đại diện"
+            android:background="@drawable/btn_bg"
+            android:layout_marginTop="10dp"
+            android:paddingHorizontal="10dp"/>
+
+        <!-- ID -->
+        <EditText
+            android:id="@+id/edtUserId"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nhập ID (VD: test123)"
+            android:padding="10dp" />
+
+        <!-- Tên người dùng -->
+        <EditText
+            android:id="@+id/edtName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nhập tên của bạn"
+            android:padding="10dp"
+            android:inputType="text"/>
+
+        <!-- Số điện thoại -->
+        <EditText
+            android:id="@+id/edtPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nhập số điện thoại"
+            android:padding="10dp"
+            android:inputType="phone"
+            android:digits="0123456789"/>
+
+        <!-- Email -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/edtEmail"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:hint="Nhập email"
+                android:padding="10dp"
+                android:inputType="textEmailAddress"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" @gmail.com"
+                android:textSize="16sp"
+                android:padding="10dp" />
+        </LinearLayout>
+
+        <!-- Địa chỉ -->
+        <EditText
+            android:id="@+id/edtAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nhập địa chỉ"
+            android:padding="10dp"
+            android:inputType="text"/>
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lưu thông tin"
+            android:background="@drawable/btn_bg"
+            android:layout_marginTop="20dp"/>
+    </LinearLayout>
+</ScrollView>
