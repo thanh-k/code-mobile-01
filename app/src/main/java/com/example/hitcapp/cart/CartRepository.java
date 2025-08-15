@@ -14,7 +14,7 @@ public class CartRepository {
 
     private static CartRepository instance;
     private final Context appCtx;
-    private final List<CartItem> cache = new ArrayList<>();
+    private final List<cartitem> cache = new ArrayList<>();
 
     private CartRepository(Context ctx) {
         this.appCtx = ctx.getApplicationContext();
@@ -26,15 +26,15 @@ public class CartRepository {
         return instance;
     }
 
-    public synchronized List<CartItem> getItems() {
+    public synchronized List<cartitem> getItems() {
         return new ArrayList<>(cache);
     }
 
     public synchronized void addOrInc(String id, String name, String imageUrl, double price) {
-        for (CartItem c : cache) {
+        for (cartitem c : cache) {
             if (c.id.equals(id)) { c.qty += 1; save(); return; }
         }
-        cache.add(new CartItem(id, name, imageUrl, price, 1));
+        cache.add(new cartitem(id, name, imageUrl, price, 1));
         save();
     }
 
@@ -59,7 +59,7 @@ public class CartRepository {
 
     public synchronized double getSubtotal() {
         double s = 0;
-        for (CartItem c : cache) s += c.getLineTotal();
+        for (cartitem c : cache) s += c.getLineTotal();
         return s;
     }
 
@@ -71,7 +71,7 @@ public class CartRepository {
         try {
             JSONArray arr = new JSONArray(raw);
             for (int i = 0; i < arr.length(); i++) {
-                CartItem it = CartItem.fromJson(arr.optJSONObject(i));
+                cartitem it = cartitem.fromJson(arr.optJSONObject(i));
                 if (it != null) cache.add(it);
             }
         } catch (Exception ignored) {}
@@ -79,7 +79,7 @@ public class CartRepository {
 
     private void save() {
         JSONArray arr = new JSONArray();
-        for (CartItem c : cache) arr.put(c.toJson());
+        for (cartitem c : cache) arr.put(c.toJson());
         appCtx.getSharedPreferences(PREF, Context.MODE_PRIVATE)
                 .edit().putString(KEY, arr.toString()).apply();
     }

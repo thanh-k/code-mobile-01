@@ -1,6 +1,7 @@
 package com.example.hitcapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
@@ -40,7 +41,7 @@ public class login extends AppCompatActivity {
         editPass     = findViewById(R.id.etPassword);
         Button btnLogin    = findViewById(R.id.btnLogin);
         Button btnRegister = findViewById(R.id.btnRegister);
-        TextView tvForgot  = findViewById(R.id.tvForgot);   // <- thêm
+        TextView tvForgot  = findViewById(R.id.tvForgot);
 
         btnLogin.setOnClickListener(v -> {
             String inputPhone = editPhone.getText().toString().trim();
@@ -58,7 +59,6 @@ public class login extends AppCompatActivity {
             startActivity(it);
         });
 
-        // Mở trang Quên mật khẩu
         tvForgot.setOnClickListener(v -> {
             Intent it = new Intent(getApplicationContext(), ForgotPasswordActivity.class);
             startActivity(it);
@@ -72,18 +72,15 @@ public class login extends AppCompatActivity {
                 Request.Method.GET, url, null,
                 response -> {
                     boolean isLoginSuccess = false;
-                    String name = "";
-                    String userId = null;
+                    JSONObject matchedUser = null;
 
                     try {
                         for (int i = 0; i < response.length(); i++) {
                             JSONObject user = response.getJSONObject(i);
                             String apiPhone = user.optString("phone", "");
-                            String apiPass  = user.optString("pass", ""); // lưu ý: field đang là 'pass'
-
+                            String apiPass  = user.optString("pass", "");
                             if (phone.equals(apiPhone) && pass.equals(apiPass)) {
-                                name   = user.optString("name", "");
-                                userId = user.optString("id", null);
+                                matchedUser = user;
                                 isLoginSuccess = true;
                                 break;
                             }
@@ -92,22 +89,27 @@ public class login extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    if (isLoginSuccess) {
-                        // LƯU PHIÊN: để màn Home/Profile lấy avatar theo id
-                        if (userId != null) {
-                            getApplicationContext()
-                                    .getSharedPreferences("app_session", MODE_PRIVATE)
-                                    .edit()
-                                    .putString("user_id", userId)
-                                    .apply();
-                        }
+                    if (isLoginSuccess && matchedUser != null) {
+                        // LƯU ĐẦY ĐỦ THÔNG TIN USER VÀO SESSION
+                        SharedPreferences sp = getApplicationContext()
+                                .getSharedPreferences("app_session", MODE_PRIVATE);
+
+                        sp.edit()
+                                .putString("user_id",      matchedUser.optString("id",""))
+                                .putString("user_name",    matchedUser.optString("name",""))
+                                .putString("user_phone",   matchedUser.optString("phone",""))
+                                .putString("user_email",   matchedUser.optString("email",""))
+                                .putString("user_address", matchedUser.optString("address",""))
+                                .putString("user_avatar",  matchedUser.optString("img","")) // có thể là URL/base64
+                                .apply();
 
                         Toast.makeText(getApplicationContext(), "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
+
                         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                        intent.putExtra("phone", phone);
-                        intent.putExtra("name", name);
+                        intent.putExtra("phone", matchedUser.optString("phone",""));
+                        intent.putExtra("name",  matchedUser.optString("name",""));
                         startActivity(intent);
-                        finish(); // không quay lại Login khi back
+                        finish(); // tránh back về Login
                     } else {
                         Toast.makeText(getApplicationContext(), "Sai số điện thoại hoặc mật khẩu", Toast.LENGTH_SHORT).show();
                     }

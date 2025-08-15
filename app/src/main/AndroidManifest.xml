@@ -15,6 +15,12 @@
         android:theme="@style/Theme.HITCApp"
         tools:targetApi="31">
         <activity
+            android:name=".cart.cartltem"
+            android:exported="false" />
+        <activity
+            android:name=".fragments.CheckoutFragment"
+            android:exported="false" />
+        <activity
             android:name=".fragments.CartFragment"
             android:exported="false" />
         <activity

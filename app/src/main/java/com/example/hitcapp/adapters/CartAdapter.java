@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.hitcapp.R;
-import com.example.hitcapp.cart.CartItem;
+import com.example.hitcapp.cart.cartitem;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -21,16 +21,16 @@ import java.util.Locale;
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.VH> {
 
     public interface OnCartAction {
-        void onInc(CartItem it);
-        void onDec(CartItem it);
-        void onRemove(CartItem it);
+        void onInc(cartitem it);
+        void onDec(cartitem it);
+        void onRemove(cartitem it);
     }
 
-    private final List<CartItem> items;
+    private final List<cartitem> items;
     private final OnCartAction listener;
     private final NumberFormat vn = NumberFormat.getCurrencyInstance(new Locale("vi","VN"));
 
-    public CartAdapter(List<CartItem> items, OnCartAction l) {
+    public CartAdapter(List<cartitem> items, OnCartAction l) {
         this.items = items;
         this.listener = l;
     }
@@ -62,7 +62,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.VH> {
 
     @Override
     public void onBindViewHolder(@NonNull VH h, int position) {
-        CartItem it = items.get(position);
+        cartitem it = items.get(position);
 
         h.name.setText(it.name);
         h.unitPrice.setText(vn.format(it.unitPrice));

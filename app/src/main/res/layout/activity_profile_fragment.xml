@@ -41,40 +41,40 @@
                 android:layout_width="match_parent"
                 android:layout_height="180dp"
                 android:scaleType="centerCrop"
-                android:src="@drawable/banner" />
+                tools:src="@drawable/banner" />
 
             <!-- Ảnh đại diện -->
             <ImageView
                 android:id="@+id/imgAvatar"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:src="@drawable/avatar"
                 android:scaleType="centerCrop"
                 android:layout_marginTop="-50dp"
                 android:background="@drawable/btn_su"
                 android:elevation="5dp"
                 android:padding="5dp"
-                android:clipToOutline="true" />
+                android:clipToOutline="true"
+                tools:src="@drawable/avatar" />
 
             <!-- Tên người dùng -->
             <TextView
                 android:id="@+id/tvUserName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="kieu Xuan Thanh"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
-                android:layout_marginTop="10dp" />
+                android:layout_marginTop="10dp"
+                tools:text="Tên người dùng" />
 
             <TextView
                 android:id="@+id/tvUserId"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text=" @test123"
                 android:textSize="14sp"
                 android:textColor="@android:color/darker_gray"
-                android:layout_marginTop="4dp" />
+                android:layout_marginTop="4dp"
+                tools:text="@user123" />
 
             <!-- Nút Chỉnh sửa hồ sơ -->
             <Button
@@ -100,24 +100,24 @@
                     android:id="@+id/tvEmail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📧 Email: test@example.com"
                     android:textSize="16sp"
-                    android:layout_marginBottom="5dp"/>
+                    android:layout_marginBottom="5dp"
+                    tools:text="📧 Email: example@gmail.com"/>
 
                 <TextView
                     android:id="@+id/tvPhone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📞 SĐT: 0123 456 789"
                     android:textSize="16sp"
-                    android:layout_marginBottom="5dp"/>
+                    android:layout_marginBottom="5dp"
+                    tools:text="📞 SĐT: 0123 456 789"/>
 
                 <TextView
                     android:id="@+id/tvAddress"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📍 Địa chỉ: TP.HCM, Việt Nam"
-                    android:textSize="16sp"/>
+                    android:textSize="16sp"
+                    tools:text="📍 Địa chỉ: Việt Nam"/>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

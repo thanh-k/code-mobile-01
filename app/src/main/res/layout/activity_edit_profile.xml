@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
@@ -9,19 +10,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center_horizontal"
-        >
+        android:gravity="center_horizontal">
 
-        <!-- Ảnh bìa -->
+        <!-- Ảnh bìa (không đặt src mặc định) -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="180dp">
+
             <ImageView
                 android:id="@+id/imgCover"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@drawable/banner" />
+                tools:src="@drawable/banner" />
+
             <Button
                 android:id="@+id/btnChangeCover"
                 android:layout_width="wrap_content"
@@ -33,18 +35,18 @@
                 android:layout_margin="10dp"/>
         </FrameLayout>
 
-        <!-- Ảnh đại diện -->
+        <!-- Ảnh đại diện (không đặt src mặc định) -->
         <ImageView
             android:id="@+id/imgProfile"
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:src="@drawable/avatar"
             android:scaleType="centerCrop"
             android:layout_marginTop="-50dp"
             android:background="@drawable/btn_su"
             android:elevation="5dp"
             android:padding="5dp"
-            android:clipToOutline="true" />
+            android:clipToOutline="true"
+            tools:src="@drawable/avatar" />
 
         <Button
             android:id="@+id/btnChangeAvatar"
@@ -70,7 +72,7 @@
             android:layout_height="wrap_content"
             android:hint="Nhập tên của bạn"
             android:padding="10dp"
-            android:inputType="text"/>
+            android:inputType="textPersonName"/>
 
         <!-- Số điện thoại -->
         <EditText
@@ -82,28 +84,14 @@
             android:inputType="phone"
             android:digits="0123456789"/>
 
-        <!-- Email -->
-        <LinearLayout
+        <!-- Email: bỏ TextView '@gmail.com' mặc định, chỉ để 1 ô email -->
+        <EditText
+            android:id="@+id/edtEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <EditText
-                android:id="@+id/edtEmail"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:hint="Nhập email"
-                android:padding="10dp"
-                android:inputType="textEmailAddress"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=" @gmail.com"
-                android:textSize="16sp"
-                android:padding="10dp" />
-        </LinearLayout>
+            android:hint="Nhập email"
+            android:padding="10dp"
+            android:inputType="textEmailAddress"/>
 
         <!-- Địa chỉ -->
         <EditText
@@ -112,7 +100,7 @@
             android:layout_height="wrap_content"
             android:hint="Nhập địa chỉ"
             android:padding="10dp"
-            android:inputType="text"/>
+            android:inputType="textPostalAddress"/>
 
         <Button
             android:id="@+id/btnSave"

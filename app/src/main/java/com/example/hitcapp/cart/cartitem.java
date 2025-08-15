@@ -2,14 +2,14 @@ package com.example.hitcapp.cart;
 
 import org.json.JSONObject;
 
-public class CartItem {
+public class cartitem {
     public String id;
     public String name;
     public String imageUrl;
     public double unitPrice;
     public int qty;
 
-    public CartItem(String id, String name, String imageUrl, double unitPrice, int qty) {
+    public cartitem(String id, String name, String imageUrl, double unitPrice, int qty) {
         this.id = id;
         this.name = name;
         this.imageUrl = imageUrl;
@@ -31,9 +31,9 @@ public class CartItem {
         return o;
     }
 
-    public static CartItem fromJson(JSONObject o) {
+    public static cartitem fromJson(JSONObject o) {
         if (o == null) return null;
-        return new CartItem(
+        return new cartitem(
                 o.optString("id",""),
                 o.optString("name",""),
                 o.optString("imageUrl",""),

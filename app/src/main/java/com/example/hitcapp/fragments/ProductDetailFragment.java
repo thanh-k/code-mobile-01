@@ -18,6 +18,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.hitcapp.R;
+import com.example.hitcapp.cart.CartRepository;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -64,7 +65,11 @@ public class ProductDetailFragment extends Fragment {
     private final List<RelatedItem> related = new ArrayList<>();
     private RelatedAdapter relatedAdapter;
 
-    private String currentId;
+    // Trạng thái hiện tại của SP (dùng khi Add to cart)
+    private String  currentId;
+    private String  currentName;
+    private String  currentImageUrl;
+    private double  currentPrice;
     private Integer currentCategoryId;
 
     private final NumberFormat vn = NumberFormat.getCurrencyInstance(new Locale("vi","VN"));
@@ -85,39 +90,60 @@ public class ProductDetailFragment extends Fragment {
 
         // Related: horizontal list
         rvRelated = v.findViewById(R.id.rvRelated);
-        rvRelated.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
-        relatedAdapter = new RelatedAdapter(related, item -> {
-            // mở chi tiết của item liên quan
-            Fragment f2 = ProductDetailFragment.newInstance(
-                    item.id, item.name, null, item.imageUrl, item.price
+        if (rvRelated != null) {
+            rvRelated.setLayoutManager(
+                    new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
             );
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.frame_layout, f2)
-                    .addToBackStack("product_detail")
-                    .commit();
-        });
-        rvRelated.setAdapter(relatedAdapter);
+            relatedAdapter = new RelatedAdapter(related, item -> {
+                // mở chi tiết của item liên quan
+                Fragment f2 = ProductDetailFragment.newInstance(
+                        item.id, item.name, null, item.imageUrl, item.price
+                );
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.frame_layout, f2)
+                        .addToBackStack("product_detail")
+                        .commit();
+            });
+            rvRelated.setAdapter(relatedAdapter);
+        }
 
-        // Hiển thị tạm từ args (để UI không trống khi đang load)
+        // Tạm hiển thị từ args (tránh trống UI)
         Bundle args = getArguments();
-        currentId = args != null ? args.getString(ARG_ID) : null;
-        String name  = args != null ? args.getString(ARG_NAME) : null;
-        String desc  = args != null ? args.getString(ARG_DESC) : null;
-        String image = args != null ? args.getString(ARG_IMAGE) : null;
-        double price = args != null ? args.getDouble(ARG_PRICE, 0d) : 0d;
+        currentId       = args != null ? args.getString(ARG_ID)          : null;
+        currentName     = args != null ? args.getString(ARG_NAME)        : null;
+        String desc     = args != null ? args.getString(ARG_DESC)        : null;
+        currentImageUrl = args != null ? args.getString(ARG_IMAGE)       : null;
+        currentPrice    = args != null ? args.getDouble(ARG_PRICE, 0d)   : 0d;
 
-        if (name  != null) tvName.setText(name);
-        if (desc  != null) tvDesc.setText(desc);
-        if (price > 0)     tvPrice.setText(vn.format(price));
-        if (image != null) loadImage(image);
+        if (currentName != null) tvName.setText(currentName);
+        if (desc != null)        tvDesc.setText(desc);
+        if (currentPrice > 0)    tvPrice.setText(vn.format(currentPrice));
+        if (currentImageUrl != null) loadImage(currentImageUrl);
 
-        // Gọi API chi tiết để lấy đầy đủ + categoryId
+        // Gọi API chi tiết để cập nhật đầy đủ + categoryId
         if (currentId != null && !currentId.isEmpty()) fetchDetailById(currentId);
 
-        btnAdd.setOnClickListener(_v ->
-                Toast.makeText(requireContext(), "Thêm vào giỏ (demo)", Toast.LENGTH_SHORT).show()
-        );
+        // === ADD TO CART ===
+        btnAdd.setOnClickListener(_v -> {
+            if (currentId == null || currentId.isEmpty()) {
+                Toast.makeText(requireContext(), "Thiếu thông tin sản phẩm", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            // Thêm vào giỏ
+            CartRepository.getInstance(requireContext())
+                    .addOrInc(currentId, currentName != null ? currentName : "",
+                            currentImageUrl != null ? currentImageUrl : "", currentPrice);
+
+            Toast.makeText(requireContext(), "Đã thêm vào giỏ: " + currentName, Toast.LENGTH_SHORT).show();
+
+            // Điều hướng sang trang Giỏ hàng
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.frame_layout, new CartFragment())
+                    .addToBackStack("cart")
+                    .commit();
+        });
 
         return v;
     }
@@ -138,26 +164,27 @@ public class ProductDetailFragment extends Fragment {
     }
 
     private void bindDetail(JSONObject o) {
-        String name  = o.optString("title", "");
+        currentName  = o.optString("title", currentName != null ? currentName : "");
         String desc  = o.optString("description", "");
-        double price = o.optDouble("price", 0);
+        currentPrice = o.optDouble("price", currentPrice);
 
-        String image = null;
+        String img = null;
         JSONArray images = o.optJSONArray("images");
-        if (images != null && images.length() > 0) image = images.optString(0, "");
+        if (images != null && images.length() > 0) img = images.optString(0, "");
+        if (img != null && !img.isEmpty()) currentImageUrl = img;
 
         // category id
         JSONObject cat = o.optJSONObject("category");
-        currentCategoryId = (cat != null) ? Integer.valueOf(cat.optInt("id", 0)) : null;
+        currentCategoryId = (cat != null) ? cat.optInt("id", 0) : null;
 
-        tvName.setText(name);
+        tvName.setText(currentName);
         tvDesc.setText(desc);
-        tvPrice.setText(vn.format(price));
-        if (image != null) loadImage(image);
+        tvPrice.setText(vn.format(currentPrice));
+        if (currentImageUrl != null) loadImage(currentImageUrl);
 
         setLoading(false);
 
-        // gọi gợi ý theo danh mục (nếu có category)
+        // Gợi ý theo danh mục
         if (currentCategoryId != null && currentCategoryId > 0) {
             fetchRelated(currentCategoryId);
         } else {
@@ -185,7 +212,7 @@ public class ProductDetailFragment extends Fragment {
             if (o == null) continue;
 
             String id = String.valueOf(o.optInt("id", 0));
-            if (id.equals(currentId)) continue; // bỏ sản phẩm hiện tại
+            if (id.equals(currentId)) continue; // bỏ chính nó
 
             String title = o.optString("title", "");
             double price = o.optDouble("price", 0);
@@ -259,7 +286,6 @@ public class ProductDetailFragment extends Fragment {
 
         @NonNull @Override
         public RelatedVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            // Tạo view nhỏ gọn bằng code (không cần file XML)
             android.content.Context ctx = parent.getContext();
             int pad = dp(ctx, 8);
 
