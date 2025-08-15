@@ -56,13 +56,13 @@
     <ImageView
         android:id="@+id/imgBanner"
         android:layout_width="0dp"
-        android:layout_height="180dp"
+        android:layout_height="140dp"
+        android:layout_marginTop="8dp"
         android:scaleType="centerCrop"
         android:src="@drawable/banner"
-        app:layout_constraintTop_toBottomOf="@+id/headerLayout"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="8dp" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/headerLayout" />
 
     <!-- Danh sách danh mục (cuộn ngang) -->
     <HorizontalScrollView

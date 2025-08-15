@@ -15,6 +15,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.hitcapp.fragments.CartFragment;
 import com.example.hitcapp.fragments.HomeFragment;
 import com.example.hitcapp.fragments.ProductsFragment;
 import com.example.hitcapp.fragments.ProfileFragment;
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new HomeFragment();
             } else if (id == R.id.nav_products) {
                 selectedFragment = new ProductsFragment();
+            } else if (id == R.id.nav_cart) {              // <— nhớ đóng ngoặc ở đây
+                selectedFragment = new CartFragment();
             } else if (id == R.id.nav_profile) {
                 selectedFragment = new ProfileFragment();
             }
