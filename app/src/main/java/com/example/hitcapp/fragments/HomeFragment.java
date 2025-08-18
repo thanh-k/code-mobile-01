@@ -9,11 +9,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.text.Editable;
+import android.text.TextWatcher;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -89,6 +92,18 @@ public class HomeFragment extends Fragment {
         );
         rv.setAdapter(adapter);
 
+        // TÌM KIẾM
+        EditText etSearch = root.findViewById(R.id.etSearch);
+        if (etSearch != null) {
+            etSearch.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    if (adapter != null) adapter.getFilter().filter(s);
+                }
+                @Override public void afterTextChanged(Editable s) { }
+            });
+        }
+
         // Avatar + menu đăng xuất
         ivAvatar = root.findViewById(R.id.imgAvatar);
         if (ivAvatar != null) {
@@ -144,7 +159,8 @@ public class HomeFragment extends Fragment {
 
             data.add(new SimpleProductAdapter.ProductItem(idStr, img, title, price));
         }
-        adapter.notifyDataSetChanged();
+        // QUAN TRỌNG: nuôi dữ liệu cho filter
+        adapter.submitList(data);
     }
 
     /* =================== CATEGORIES =================== */
