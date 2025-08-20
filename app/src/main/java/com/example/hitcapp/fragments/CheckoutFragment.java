@@ -3,13 +3,16 @@ package com.example.hitcapp.fragments;
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.*;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.*;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -90,9 +93,8 @@ public class CheckoutFragment extends Fragment {
         rv.setAdapter(adapter);
         loadFromCart();
 
-        btnChangeAddress.setOnClickListener(_v ->
-                Toast.makeText(requireContext(), "Mở màn chỉnh sửa địa chỉ (chưa làm)", Toast.LENGTH_SHORT).show()
-        );
+        // MỞ DIALOG CHỈNH SỬA ĐỊA CHỈ (dùng nút trong layout)
+        btnChangeAddress.setOnClickListener(_v -> showEditAddressDialog());
 
         btnPlaceOrder.setOnClickListener(_v -> {
             if (data.isEmpty()) {
@@ -105,13 +107,11 @@ public class CheckoutFragment extends Fragment {
                     .setTitle("Xác nhận đặt hàng")
                     .setMessage("Phương thức: " + payment + "\nTổng: " + tvTotal.getText())
                     .setPositiveButton("Đồng ý", (d, w) -> {
-                        // 1) Resolve đầy đủ thông tin user
                         resolveUserProfile(profile -> {
                             if (profile == null) {
                                 Toast.makeText(requireContext(), "Không lấy được thông tin người dùng", Toast.LENGTH_SHORT).show();
                                 return;
                             }
-                            // 2) Gửi đơn cho từng sản phẩm trong giỏ
                             sendOrdersForCart(profile);
                         });
                     })
@@ -122,8 +122,116 @@ public class CheckoutFragment extends Fragment {
         return v;
     }
 
-    /* ---------- Shipping info hiển thị ---------- */
+    /* ---------- DIALOG: Chỉnh sửa địa chỉ (Material, dùng nút trong layout) ---------- */
+    private void showEditAddressDialog() {
+        View form = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_edit_address, null, false);
 
+        // Lấy view trong layout
+        com.google.android.material.textfield.TextInputEditText etName     = form.findViewById(R.id.etName);
+        com.google.android.material.textfield.TextInputEditText etPhone    = form.findViewById(R.id.etPhone);
+        com.google.android.material.textfield.TextInputEditText etStreet   = form.findViewById(R.id.etStreet);
+        com.google.android.material.textfield.TextInputEditText etWard     = form.findViewById(R.id.etWard);
+        com.google.android.material.textfield.TextInputEditText etDistrict = form.findViewById(R.id.etDistrict);
+        com.google.android.material.textfield.TextInputEditText etCity     = form.findViewById(R.id.etCity);
+
+        Button btnCancel = form.findViewById(R.id.btnCancel);
+        Button btnSave   = form.findViewById(R.id.btnSave);
+
+        SharedPreferences sp = requireContext()
+                .getSharedPreferences("app_session", android.content.Context.MODE_PRIVATE);
+
+        // Prefill dữ liệu đang có
+        etName.setText(sp.getString("user_name", ""));
+        etPhone.setText(sp.getString("user_phone", ""));
+        // Nếu trước đó chỉ lưu 1 chuỗi user_address, tạm cho vào street để người dùng sửa nhanh
+        etStreet.setText(sp.getString("user_address", ""));
+
+
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setTitle("Chỉnh sửa địa chỉ")
+                .setView(form)
+                .create();
+
+        // Nút Hủy (trong layout)
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        // Nút Lưu (trong layout)
+        btnSave.setOnClickListener(v -> {
+            String name     = textOf(etName);
+            String phone    = textOf(etPhone);
+            String street   = textOf(etStreet);
+            String ward     = textOf(etWard);
+            String district = textOf(etDistrict);
+            String city     = textOf(etCity);
+
+            // Validate tối thiểu
+            if (name.isEmpty())  { etName.setError("Nhập họ tên"); return; }
+            if (phone.isEmpty()) { etPhone.setError("Nhập số điện thoại"); return; }
+            boolean hasSubRegion = !ward.isEmpty() || !district.isEmpty() || !city.isEmpty();
+            if (street.isEmpty() && !hasSubRegion) {
+                etStreet.setError("Nhập địa chỉ hoặc ít nhất phường/quận/tỉnh");
+                return;
+            }
+
+            // Ghép "ward - district - city"
+            String sub = joinWith(" - ", ward, district, city);
+
+            // Chuỗi hiển thị cuối cùng
+            String finalAddress;
+            if (!street.isEmpty() && !sub.isEmpty()) finalAddress = street + " - " + sub;
+            else if (!street.isEmpty())              finalAddress = street;
+            else                                      finalAddress = sub;
+
+            // XÓA địa chỉ cũ rồi lưu địa chỉ MỚI
+            clearCachedAddress(sp);
+            sp.edit()
+                    .putString("user_name", name)
+                    .putString("user_phone", phone)
+                    .putString("user_address", finalAddress)
+                    .apply();
+
+            // Cập nhật UI
+            tvShipNamePhone.setText(formatNamePhone(name, phone));
+            tvShipAddress.setText(finalAddress);
+
+            Toast.makeText(requireContext(), "Đã cập nhật địa chỉ giao hàng", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    /* ---------- Helpers ---------- */
+    private static String textOf(com.google.android.material.textfield.TextInputEditText e) {
+        return e.getText() == null ? "" : e.getText().toString().trim();
+    }
+
+    private static String joinWith(String sep, String... parts) {
+        StringBuilder sb = new StringBuilder();
+        for (String p : parts) {
+            if (p != null) {
+                String t = p.trim();
+                if (!t.isEmpty()) {
+                    if (sb.length() > 0) sb.append(sep);
+                    sb.append(t);
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    private void clearCachedAddress(SharedPreferences sp) {
+        sp.edit()
+                .remove("user_address")
+                .remove("user_street")
+                .remove("user_ward")
+                .remove("user_district")
+                .remove("user_city")
+                .apply();
+    }
+
+    /* ---------- Shipping info hiển thị ---------- */
     private void bindShippingFromSessionOrApi() {
         SharedPreferences sp = requireContext()
                 .getSharedPreferences("app_session", android.content.Context.MODE_PRIVATE);
@@ -140,7 +248,6 @@ public class CheckoutFragment extends Fragment {
         } else if (userId != null && !userId.isEmpty()) {
             fetchUserByIdAndBind(userId);
         } else {
-            // fallback mặc định
             tvShipNamePhone.setText("Khách hàng · 090xxxxxxx");
             tvShipAddress.setText("");
         }
@@ -184,7 +291,6 @@ public class CheckoutFragment extends Fragment {
     }
 
     /* ---------- Cart ---------- */
-
     private void loadFromCart() {
         data.clear();
         subtotal = 0d;
@@ -210,7 +316,6 @@ public class CheckoutFragment extends Fragment {
     }
 
     /* ---------- Resolve user profile trước khi gửi đơn ---------- */
-
     private interface ProfileCallback { void onReady(UserProfile profile); }
 
     private void resolveUserProfile(ProfileCallback cb) {
@@ -224,7 +329,6 @@ public class CheckoutFragment extends Fragment {
         p.address = sp.getString("user_address", null);
         p.email   = sp.getString("user_email", null);
 
-        // Nếu đã có thông tin tối thiểu, dùng luôn
         if ((p.name != null && !p.name.isEmpty())
                 || (p.phone != null && !p.phone.isEmpty())
                 || (p.address != null && !p.address.isEmpty())) {
@@ -232,7 +336,6 @@ public class CheckoutFragment extends Fragment {
             return;
         }
 
-        // Nếu có user_id nhưng thiếu thông tin => fetch từ API rồi cache lại
         if (p.id != null && !p.id.isEmpty()) {
             String url = USERS_URL + "/" + p.id;
             JsonObjectRequest req = new JsonObjectRequest(
@@ -243,7 +346,6 @@ public class CheckoutFragment extends Fragment {
                         p.address = o.optString("address", "");
                         p.email   = o.optString("email", "");
 
-                        // cache
                         sp.edit()
                                 .putString("user_name", p.name)
                                 .putString("user_phone", p.phone)
@@ -253,7 +355,7 @@ public class CheckoutFragment extends Fragment {
 
                         cb.onReady(p);
                     },
-                    err -> cb.onReady(p) // trả về những gì có (fallback)
+                    err -> cb.onReady(p)
             );
             req.setRetryPolicy(new DefaultRetryPolicy(8000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
             Volley.newRequestQueue(requireContext()).add(req);
@@ -263,7 +365,6 @@ public class CheckoutFragment extends Fragment {
     }
 
     /* ---------- Gửi đơn hàng ---------- */
-
     private void sendOrdersForCart(UserProfile profile) {
         CartRepository repo = CartRepository.getInstance(requireContext());
         List<cartitem> items = repo.getItems();
@@ -278,7 +379,6 @@ public class CheckoutFragment extends Fragment {
         final AtomicInteger finished = new AtomicInteger(0);
 
         for (cartitem it : items) {
-            // B1: Lấy chi tiết sản phẩm để có category id + name
             String detailUrl = PRODUCT_DETAIL_URL + it.id;
             JsonObjectRequest getDetail = new JsonObjectRequest(
                     Request.Method.GET, detailUrl, null,
@@ -286,13 +386,9 @@ public class CheckoutFragment extends Fragment {
                         JSONObject cat = o.optJSONObject("category");
                         String idCate = cat != null ? String.valueOf(cat.optInt("id", -1)) : "";
                         String catName = cat != null ? cat.optString("name", "") : "";
-                        // B2: Đẩy đơn hàng (1 record) lên MockAPI với kèm thông tin user
                         postOrderLine(it, idCate, catName, profile, () -> afterOnePosted(finished, total));
                     },
-                    err -> {
-                        // Nếu lỗi lấy category, vẫn post với idcate/categories rỗng
-                        postOrderLine(it, "", "", profile, () -> afterOnePosted(finished, total));
-                    }
+                    err -> postOrderLine(it, "", "", profile, () -> afterOnePosted(finished, total))
             );
             getDetail.setRetryPolicy(new DefaultRetryPolicy(10_000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
             Volley.newRequestQueue(requireContext()).add(getDetail);
@@ -301,12 +397,10 @@ public class CheckoutFragment extends Fragment {
 
     private void afterOnePosted(AtomicInteger finished, int total) {
         if (finished.incrementAndGet() == total) {
-            // Tất cả dòng đã post xong
             CartRepository.getInstance(requireContext()).clear();
             btnPlaceOrder.setEnabled(true);
             Toast.makeText(requireContext(), "Đặt hàng thành công!", Toast.LENGTH_SHORT).show();
 
-            // Điều hướng về Cart (tuỳ luồng app)
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.frame_layout, new CartFragment())
@@ -322,15 +416,11 @@ public class CheckoutFragment extends Fragment {
                 Request.Method.POST,
                 ORDER_URL,
                 resp -> onDone.run(),
-                err  -> {
-                    // Có thể log/hiện toast nếu muốn theo dõi lỗi từng dòng
-                    onDone.run();
-                }
+                err  -> onDone.run()
         ) {
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> p = new HashMap<>();
-                // Thông tin người dùng
                 if (profile != null) {
                     if (profile.id != null)      p.put("userid", profile.id);
                     if (profile.name != null)    p.put("username", profile.name);
@@ -338,15 +428,11 @@ public class CheckoutFragment extends Fragment {
                     if (profile.address != null) p.put("address", profile.address);
                     if (profile.email != null && !profile.email.isEmpty()) p.put("email", profile.email);
                 }
-
-                // Thông tin sản phẩm/đơn
-                p.put("idcate",       idCate);                     // id danh mục
-                p.put("idpro",        it.id);                      // id sản phẩm
-                p.put("product",      it.name);                    // tên sản phẩm
-                p.put("categories",   categoryName);               // tên danh mục
-                p.put("creationdate", creationDate);               // thời gian tạo đơn
-
-                // Tuỳ chọn (tham khảo mẫu trên MockAPI):
+                p.put("idcate",       idCate);
+                p.put("idpro",        it.id);
+                p.put("product",      it.name);
+                p.put("categories",   categoryName);
+                p.put("creationdate", creationDate);
                 p.put("quantity",     String.valueOf(it.qty));
                 p.put("price",        String.format(Locale.US, "%.2f", it.unitPrice * it.qty));
                 return p;
